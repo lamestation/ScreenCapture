@@ -11,16 +11,19 @@ Included in this project is a test game that is already configured to take a scr
 
 Drop the `ScreenCapture` and `FullDuplexSerial` objects into your project.
 
-        OBJ
-            cap     : "ScreenCapture"
+    OBJ
+        cap     : "ScreenCapture"
 
 Get access to the screen buffer.
 
-        VAR
-            word    buffer
-        PUB Main
-            buffer := gfx.Start
-            lcd.Start(buffer)
+    VAR
+        word    buffer
+
+Initialize your display surface in the following way so that ScreenCapture can have access to the buffer.
+
+    PUB Main
+        buffer := gfx.Start
+        lcd.Start(buffer)
 
 Pass the screen buffer address to the `Capture` method when you wish to take a picture.
 
