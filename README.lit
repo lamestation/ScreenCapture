@@ -1,4 +1,3 @@
-
 # The Screen Capture toolkit
 
 With this project, you can take screenshots of LameStation games! (epic!)
@@ -11,11 +10,13 @@ Included in this project is a test game that is already configured to take a scr
 
 Drop the `ScreenCapture` and `FullDuplexSerial` objects into your project.
 
+    << snippet.spin >>+=
         OBJ
             cap     : "ScreenCapture"
 
 Get access to the screen buffer.
 
+    << snippet.spin >>+=
         VAR
             word    buffer
         PUB Main
@@ -33,6 +34,7 @@ Pass the screen buffer address to the `Capture` method when you wish to take a p
         if ctrl.A
             cap.Capture(buffer)}}
 
+
 ### Capture the image
 
 #### Capture using `lscapture`
@@ -41,9 +43,7 @@ The easiest way is to use the `lscapture` python tool. Here's how to use it.
 
 Get a list of available ports with `-l`.
 
-    $ lscapture -l
-    /dev/ttyUSB0
-    /dev/ttyUSB1
+    <<#! lscapture -l >>
 
 Now run `lscapture` with the full port name to start the screen capture server.
 
@@ -66,32 +66,17 @@ The `-s` option will scale the resulting image to different sizes. The default i
 
 For a full help, pass `-h`.
 
-    $ lscapture -h
-    usage: lscapture [-h] [-s FACTOR] [-o FILE] [-l] [-d] [PORT]
-
-    Take screenshots of LameStation games! (epic!)
-
-    positional arguments:
-      PORT                  Port to capture image
-
-    optional arguments:
-      -h, --help            show this help message and exit
-      -s FACTOR, --scale FACTOR
-                            Integer factor by which to scale the output image
-                            (default: 4)
-      -o FILE, --out FILE   Specify output file name
-      -l, --list            List ports available to capture from
-      -d, --display         Show resulting image
+    <<#! lscapture -h >>
 
 #### Capture From Serial Terminal
 
 If, for whatever reason, you don't have access to Python, or maybe you're too cool to use the included `lscapture` tool to capture the images, you can still capture the images by hand using a serial terminal and a little internet.
 
-Capture the BASE64-encoded output from the serial terminal (it's 78 lines long)
+Capture the BASE64-encoded output from the serial terminal (it's 78 lines long)   
 
 ![](images/16089172.png)
 
-Copy the output to [this tool](http://www.motobit.com/util/base64-decoder-encoder.asp) .
+Copy the output to [this tool](http://www.motobit.com/util/base64-decoder-encoder.asp) .   
 
 ![](images/16089169.png)
 
@@ -100,12 +85,11 @@ Select " **decode** the data **from a Base64** string (base64 decoding)"
 ![](images/16089170.png)
 
 Select "export to a binary file" with a `.bmp` extension.
-
+  
 ![](images/16089167.png)
 
 Click ![](images/16089168.png) to export the image to
-
-bitmap. It will be very small.
+bitmap. It will be very small.   
 
 ![](images/16089171.bmp)
 
