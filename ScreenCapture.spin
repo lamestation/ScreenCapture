@@ -19,7 +19,7 @@
 '' *NOTE: you may also pass a 128x64 sprite as an address, if you skip the sprite header.*
 
 OBJ
-    serial: "FullDuplexSerial"
+    serial: "LameSerial"
 
 VAR
     long  cog
@@ -30,11 +30,11 @@ PUB null
 PUB Capture(addr) | amount, length, screen
 
     if not cog
-        cog := serial.start(31, 30, %0000, 115200)
+        cog := serial.Start
         waitcnt(clkfreq*3 + cnt)
     
-    serial.tx(0)
-    serial.str(string(10,"-----start",10))
+    serial.Char(0)
+    serial.Str(string(10,13,"-----start",10))
 
     Convert(@tail{0}, addr)                             ' 2bit/px -> 4bit/px
     
@@ -47,8 +47,9 @@ PUB Capture(addr) | amount, length, screen
         screen += amount                                ' |
         length := 0 #> (length - 54)                    ' advance
         
-        serial.str(@buffer{0})
-        serial.tx(10)                                   ' LF needed for Linux compatibility
+        serial.Str(@buffer{0})
+        serial.Char(13)
+        serial.Char(10)                                   ' LF needed for Linux compatibility
     while length
 
     serial.str(string(10,"-----end",10))
