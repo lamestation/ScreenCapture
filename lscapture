@@ -11,6 +11,8 @@ import argparse
 import serial
 from serial.tools import list_ports
 
+baudrate = 115200
+
 def get_ports():
     pat = re.compile('ttyS.*')
     ports = list_ports.comports()
@@ -24,7 +26,7 @@ def serial_capture(port):
 
     ser = None
     try:
-        ser = serial.Serial(port, 115200, timeout=2)
+        ser = serial.Serial(port, baudrate, timeout=2)
     except serial.serialutil.SerialException:
         print "Error: could not open port '"+args.port+"'\nrun with '--list' to get available ports"
         sys.exit(1)
@@ -76,6 +78,7 @@ def main():
     parser.add_argument('-o','--out',metavar='FILE',nargs=1,help="Specify output file name")
     parser.add_argument('-l','--list',action='store_true',help="List ports available to capture from")
     parser.add_argument('-d','--display',action='store_true',help="Show resulting image")
+    parser.add_argument('-b','--baudrate',metavar="BAUD",type=int,nargs=1,help="Set baud rate of port")
 
     args = parser.parse_args()
 
@@ -88,6 +91,9 @@ def main():
     if not args.port:
         print "Error: port not specified\nrun with '--list' to get available ports"
         sys.exit(1)
+
+    if args.baudrate:
+        baudrate = args.baudrate
 
     data = serial_capture(args.port)
     im = convert_to_image(data,args.scale[0])
