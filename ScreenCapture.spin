@@ -23,7 +23,8 @@ PUB null
 PUB Capture(addr)
 
     ifnot cog
-        cog := serial.Start
+        ifnot cog := serial.Start
+            return
         waitcnt(clkfreq*3 + cnt)
     
     serial.Str(string($AA, $AA, $AA, $AA))              ' header
