@@ -26,7 +26,9 @@ PUB Capture(addr)
         cog := serial.Start
         waitcnt(clkfreq*3 + cnt)
     
-    serial.Str(string($AA, $AA, $AA, $AA))
+    serial.Str(string($AA, $AA, $AA, $AA))              ' header
 
     repeat 2048
         serial.Char(byte[addr++])
+
+    serial.Str(string($AA, $AA, $55, $55))              ' tail
