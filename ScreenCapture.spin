@@ -28,7 +28,7 @@ PUB Capture(addr)
     
     serial.Str(string($AA, $AA, $AA, $AA))              ' header
 
-    repeat 2048
+    repeat 2048                                         ' 128x64x2/8
         serial.Char(byte[addr++])
 
     serial.Str(string($AA, $AA, $55, $55))              ' tail
