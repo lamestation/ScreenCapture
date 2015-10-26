@@ -1,20 +1,15 @@
 '' Screen Capture Tool
 '' -------------------------------------------------
-'' Use this app to dump a screen buffer to a BASE64-
-'' encoded BMP file
-''
 ''        Author: Marko Lukat
-'' Last modified: 2014/06/17
-''       Version: 0.2
+'' Last modified: 2015/10/26
+''       Version: 0.3
 '' -------------------------------------------------
 ''
 '' ### Usage 
 ''
-''  * Include the *ScreenCapture* object into your project (requires FullDuplexSerial)
+''  * Include the *ScreenCapture* object into your project
 ''  * Pass a screen buffer address to the Capture method
-''  * Capture the BASE64-encoded output from the serial terminal (it's 78 lines long)
-''  * Convert to a bitmap using [this tool](http://www.motobit.com/util/base64-decoder-encoder.asp) 
-''  (set decode and export as a binary file with a `.bmp` extension).
+''  * Output is captured and converted with lscapture (host side).
 ''
 '' *NOTE: you may also pass a 128x64 sprite as an address, if you skip the sprite header.*
 
@@ -23,102 +18,15 @@ OBJ
 
 VAR
     long  cog
-    byte  buffer[124]
-  
+
 PUB null
+PUB Capture(addr)
 
-PUB Capture(addr) | amount, length, screen
-
-    if not cog
+    ifnot cog
         cog := serial.Start
         waitcnt(clkfreq*3 + cnt)
     
-    serial.Char(0)
-    serial.Str(string(10,13,"-----start",10))
+    serial.Str(string($AA, $AA, $AA, $AA))
 
-    Convert(@tail{0}, addr)                             ' 2bit/px -> 4bit/px
-    
-    length := 4096 + 70                                 ' image length
-    screen := @image{0}                                 ' image start address
-    
-    repeat
-        amount := 54 <# length                          ' 54/3*4 = 72 chars
-        Encode(@buffer{0}, screen, amount)
-        screen += amount                                ' |
-        length := 0 #> (length - 54)                    ' advance
-        
-        serial.Str(@buffer{0})
-        serial.Char(13)
-        serial.Char(10)                                   ' LF needed for Linux compatibility
-    while length
-
-    serial.str(string(10,"-----end",10))
-
-PRI Encode(dst, src, length)
-
-    repeat while length
-        length -= Small(dst, src, 3 <# length)
-        dst    += 4
-        src    += 3
-    
-    byte[dst++] := 0
-
-PRI Small(dst, src, length) : n | data, index
-    
-    data := 0
-    index := 18
-    
-    repeat length
-        data.byte[2 - n++] := byte[src++]
-    
-    byte[dst++] := table[data >> index]
-    
-    repeat 3
-        index -= 6
-        if length
-            byte[dst++] := table[(data >> index) & $3F]
-            length--
-            next
-        byte[dst++] := "="
-    
-PRI Convert(dst, src) : y
-
-    repeat y from 63 to 0
-        dst := Expand(dst, src + y*32)
-
-PRI Expand(dst, src) : v
-
-    repeat 32                                           ' pixel order is bigendian(!)
-        v := byte[src++]
-        byte[dst++] := (v & %%0003) << 4 | (v & %%0030) >> 2
-        byte[dst++] := (v & %%0300){>> 0}| (v & %%3000) >> 6
-    
-    return dst
-  
-DAT
-table   byte    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-
-image   byte    "B", "M"
-        byte    70, 16, 0, 0
-        byte    0, 0, 0, 0
-        byte    70, 0, 0 ,0
-
-        byte    40, 0, 0, 0
-        byte    128, 0, 0, 0
-        byte    64, 0, 0, 0
-        byte    1, 0
-        byte    4, 0
-        byte    0, 0, 0, 0
-        byte    0, 16, 0, 0
-        byte    $13, $0B, 0, 0
-        byte    $13, $0B, 0, 0
-        byte    4, 0, 0, 0
-        byte    0, 0, 0, 0
-
-        'format  B    G    R    A (ignored)
-        byte    $FE, $40, $71, $00          'black
-        byte    $CC, $CC, $CC, $00          'white
-        byte    $FF, $00, $FF, $00          'transparent
-        byte    $E1, $7D, $B1, $00          'gray
-
-tail    byte    0[4096]
+    repeat 2048
+        serial.Char(byte[addr++])
