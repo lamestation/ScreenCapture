@@ -21,51 +21,88 @@ def get_ports():
 
     return ports
 
-def serial_capture(port):
-    output = ""
 
-    ser = None
+def download_raw(port):
+
+    header = '\xAA\xAA\xAA\xAA'
+
+    payload  = False
+    incoming = ""
+
     try:
-        ser = serial.Serial(port, baudrate, timeout=2)
-    except serial.serialutil.SerialException:
-        print "Error: could not open port '"+args.port+"'\nrun with '--list' to get available ports"
+        ser = None
+        ser = serial.Serial(port, baudrate, timeout = 2)
+        ser.flushInput()
+
+        print "Listening for capture input on port '" + port + "'..."
+        while True:
+            incoming += ser.read(2048 + len(header))
+
+            if not payload:
+                start = incoming.find(header)
+                if start == -1:
+                    incoming = incoming[1 - len(header):]
+                    continue
+
+                print "Receiving image."
+
+                output   = ""
+                payload  = True
+                incoming = incoming[start + len(header):]
+
+            if payload and len(output) < 2048:
+                output += incoming[:2048 - len(output)]
+                if len(output) == 2048:
+                    print "Download complete."
+                    break
+
+    except Exception as e:
+        sys.stderr.write('%s\n' % e)
         sys.exit(1)
 
-    print "Listening for capture input on port '"+port+"'..."
-    on = False
-    while True:
-        data_raw = ser.readline().strip()
-
-        if '-----start' in data_raw:
-            output = ""
-            print "Receiving image download!"
-            on = True
-        elif '-----end' in data_raw:
-            on = False
-            break
-        elif on == True:
-            output += data_raw
-
-    ser.close()
+    finally:
+        if ser:
+            ser.close()
 
     return output
 
-
-def convert_to_image(data,scale=4):
-    data = data.strip()
-    data = base64.decodestring(data)
-    data = StringIO.StringIO(data)
     
+def generate_bmp(data, scale = 4):
+
+    def expand_2b_to_4b(data):
+
+        output = ""
+        for b in xrange(32):
+            value   = ord(data[b])
+            output += chr((value & 0x03) << 4 | (value & 0x0C) >> 2)
+            output += chr((value & 0x30)      | (value & 0xC0) >> 6)
+
+        return output
+
+
+    header = 'BM\x46\x10\x00\x00\x00\x00\x00\x00\x46\x00\x00\x00'   \
+            +'\x28\x00\x00\x00\x80\x00\x00\x00\x40\x00\x00\x00'     \
+            +'\x01\x00\x04\x00\x00\x00\x00\x00\x00\x10\x00\x00'     \
+            +'\x13\x0B\x00\x00\x13\x0B\x00\x00\x04\x00\x00\x00'     \
+            +'\x00\x00\x00\x00'                                     \
+            +'\xFE\x40\x71\x00'                                     \
+            +'\xCC\xCC\xCC\x00'                                     \
+            +'\x00\x00\xFF\x00'                                     \
+            +'\xE1\x7D\xB1\x00'
+
+    payload = ""
+    for y in xrange(63, -1, -1):
+        payload += expand_2b_to_4b(data[32*y:][:32])
+
+    data = StringIO.StringIO(header + payload)
     im = Image.open(data)
 
     size = im.size
     newsize = (im.size[0]*scale, im.size[1]*scale)
 
-    im = im.resize(newsize)
+    return im.resize(newsize)
+
     
-    return im
-
-
 def main():
     defaultscale = 4
 
@@ -95,8 +132,8 @@ def main():
     if args.baudrate:
         baudrate = args.baudrate
 
-    data = serial_capture(args.port)
-    im = convert_to_image(data,args.scale[0])
+    data = download_raw(args.port)
+    im   = generate_bmp(data, args.scale[0])
 
     if args.display:
         im.show()
