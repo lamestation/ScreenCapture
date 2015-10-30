@@ -10,6 +10,15 @@ import argparse
 import serial
 from serial.tools import list_ports
 
+# intercept CTRL+C
+import signal
+def signal_handler(signal, frame):
+    print
+    sys.exit(0)
+signal.signal(signal.SIGINT, signal_handler)
+
+
+ser = None
 baudrate = 115200
 
 def get_ports():
@@ -21,19 +30,15 @@ def get_ports():
     return ports
 
 
-def download_raw(port):
-
+def download_raw():
+    
+    global ser
     header = '\xAA\xAA\xAA\xAA'
 
     payload  = False
     incoming = ""
 
     try:
-        ser = None
-        ser = serial.Serial(port, baudrate, timeout = 2)
-        ser.flushInput()
-
-        print "Listening for capture input on port '" + port + "'..."
         while True:
             incoming += ser.read(2048 + len(header))
 
@@ -58,10 +63,6 @@ def download_raw(port):
     except Exception as e:
         sys.stderr.write('%s\n' % e)
         sys.exit(1)
-
-    finally:
-        if ser:
-            ser.close()
 
     return output
 
@@ -105,15 +106,17 @@ def generate_bmp(data, scale = 4):
 def main():
     defaultscale = 4
 
+    global baudrate
+    global ser
+
     parser = argparse.ArgumentParser(description='Take screenshots of LameStation games! (epic!)')
     parser.add_argument('port',metavar='PORT',nargs='?',help='Port to capture image')
 
     parser.add_argument('-s','--scale',metavar='FACTOR',nargs=1,type=int,default=[defaultscale],
             help='Integer factor by which to scale the output image (default: '+str(defaultscale)+')')
 
-    parser.add_argument('-o','--out',metavar='FILE',nargs=1,help="Specify output file name")
+    parser.add_argument('-o','--out',metavar='FILE',nargs=1,help="Specify output file name prefix")
     parser.add_argument('-l','--list',action='store_true',help="List ports available to capture from")
-    parser.add_argument('-d','--display',action='store_true',help="Show resulting image")
     parser.add_argument('-b','--baudrate',metavar="BAUD",type=int,nargs=1,help="Set baud rate of port")
 
     args = parser.parse_args()
@@ -128,29 +131,41 @@ def main():
         print "Error: port not specified\nrun with '--list' to get available ports"
         sys.exit(1)
 
+    print "Listening for capture input on port '" + args.port + "'..."
+
     if args.baudrate:
         baudrate = args.baudrate
 
-    data = download_raw(args.port)
-    im   = generate_bmp(data, args.scale[0])
+    if not args.out:
+        args.out = 'pic'
+    else:
+        args.out = args.out[0]
 
-    if args.display:
-        im.show()
+    try:
+        ser = serial.Serial(args.port, baudrate, timeout = 2)
+    except Exception as e:
+        sys.stderr.write('%s\n' % e)
+        sys.exit(1)
 
     output = ""
-    if args.out:
-        output = args.out[0]
-    else:
-        index = 1
+    index = 1
+
+    while True:
         while True:
-            output = 'pic'+str(index)+'.png'
+            output = args.out+str(index).zfill(3)+'.png'
             if not os.path.exists(output):
                 break
             index += 1
-    
-    print "Generating "+output+"..."
 
-    im.save(output)
+        data = download_raw()
+        im   = generate_bmp(data, args.scale[0])
+
+        print "Generating "+output
+        im.save(output)
+        index += 1
+
+    if ser:
+        ser.close()
 
 if __name__ == '__main__':
     main()
