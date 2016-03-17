@@ -1,6 +1,5 @@
 # lscapture
-
-* A screen capture tools for the LameStation.
+#### screen capture for LameStation
 
 With this project, you can take screenshots of LameStation games! (epic!)
 
