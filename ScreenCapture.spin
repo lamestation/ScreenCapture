@@ -14,7 +14,7 @@
 '' *NOTE: you may also pass a 128x64 sprite as an address, if you skip the sprite header.*
 
 OBJ
-    serial: "LameSerial"
+    ser : "LameSerial"
 
 VAR
     long  cog
@@ -23,11 +23,11 @@ PUB null
 PUB Capture(addr)
 
     ifnot cog
-        ifnot cog := serial.Start
+        ifnot cog := ser.StartRxTx(31, 30, 0, 921600)
             return
         waitcnt(clkfreq*3 + cnt)
     
-    serial.Str(string($AA, $AA, $AA, $AA))              ' header
+    ser.Str(string($AA, $AA, $AA, $AA))              ' header
 
     repeat 2048                                         ' 128x64x2/8
-        serial.Char(byte[addr++])
+        ser.Char(byte[addr++])

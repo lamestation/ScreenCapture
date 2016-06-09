@@ -19,7 +19,7 @@ signal.signal(signal.SIGINT, signal_handler)
 
 
 ser = None
-baudrate = 115200
+baudrate = 921600
 
 def get_ports():
     pat = re.compile('ttyS.*')
@@ -134,7 +134,7 @@ def main():
     print "Listening for capture input on port '" + args.port + "'..."
 
     if args.baudrate:
-        baudrate = args.baudrate
+        baudrate = args.baudrate[0]
 
     if not args.out:
         args.out = 'pic'

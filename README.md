@@ -85,19 +85,21 @@ is `4x`.
 
 For a full help, pass `-h`.
 
-    $ lscapture -h
-    usage: lscapture [-h] [-s FACTOR] [-o FILE] [-l] [-d] [PORT]
+### Creating a video
 
-    Take screenshots of LameStation games! (epic!)
+You may end up with a large number of images and want to make an awesome video 
+of it. You can use `ffmpeg` to do so; here is a decent one-liner.
 
-    positional arguments:
-      PORT                  Port to capture image
+    ffmpeg -r 30 -f image2 -s 1920x1080 -i pic%03d.png -vcodec libx264 -crf 25  -pix_fmt yuv420p out.mp4
 
-    optional arguments:
-      -h, --help            show this help message and exit
-      -s FACTOR, --scale FACTOR
-                            Integer factor by which to scale the output image
-                            (default: 4)
-      -o FILE, --out FILE   Specify output file name
-      -l, --list            List ports available to capture from
-      -d, --display         Show resulting image
+The only thing you may want to change is `-r 30`, which is the frame rate, 
+depending on the speed of your game.
+
+Remember that on LameStation:
+
+- Unlimited: up to ~70Hz
+- `FULLSPEED`: ~30Hz
+- `HALFSPEED`: ~15Hz
+- `QUARTERSPEED`: ~7Hz
+
+
