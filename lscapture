@@ -152,7 +152,7 @@ def main():
 
     while True:
         while True:
-            output = args.out+str(index).zfill(3)+'.png'
+            output = args.out+str(index).zfill(4)+'.png'
             if not os.path.exists(output):
                 break
             index += 1
